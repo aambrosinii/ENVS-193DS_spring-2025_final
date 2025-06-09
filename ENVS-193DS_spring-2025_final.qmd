@@ -225,3 +225,39 @@ i:
 **Source**: Stojanovic, Dejan et al. (2021). *Do nest boxes breed the target species or its competitors? A case study of a critically endangered bird* \[Dataset\]. Dryad. <https://doi.org/10.5061/dryad.83bk3j9sb>
 
 j:
+
+```{r}
+# Creating new data frame
+new_data <- expand.grid(
+  edge_distance = c(0, 900),
+  season = factor(c(2016, 2019)) # Treating season as factor
+)
+# Generating predicted probabilities  and 95% confidence intervals
+predicted <- predict(
+  model1,
+  newdata = new_data,
+  type = "response", # Getting probabilities
+  se.fit = TRUE # Getting standard errors for CI
+)
+# Calculating 95% Confidence Intervals
+new_data$fit <- predicted$fit
+new_data$lwr <- predicted$fit - 1.96 * predicted$se.fit
+new_data$upr <- predicted$fit + 1.96 * predicted$se.fit
+
+# Displaying results
+new_data
+```
+
+k: These results show that the predicted probability of Swift Parrot nest box occupancy is highest at the forest edge (0m) and decreases substaintially at 900m from the edge, in both 2016 and 2019. At 0m, the predicted occupancy probability was 48.1% in 2016 and 29.8% in 2019. At 900m, the probabilities dropped to 12.5% in 2016 and 6.1% in 2019. This pattern suggests a negative relationship between distance from the forest edge and nest box occupancy by Swift Parrots, whereas lower probabilities in 2019 may indicate less favorable environmental conditions or a lower population during that period. This suggests that Swift Parrots may rely on forest edges for food, resources, and nesting habitats, and may avoid the forest interior due to risk of predation or a lack of resources.
+
+Problem 4
+
+a: My exploratory visualizations from Homework 2 were much simpler, using a box plot and a linear plot comparing line wait times with number of people in line. Homework 2 had less data and highlighted medians, quartiles, and spread, however, my affective visualization from Homework 3 compared means using a dot and diamond plot. Due to its higher complexity and gradient, this was more useful in both comparing and emphasizing the emotional experience of waiting, using color and point size to communicate intensity and variation in wait durations between weekdays and weekends.
+
+b: Both visualizations include plots that compare wait times across weekdays and weekends. These also use similar x and y-axis labeling.
+
+c: Both visualizations show that wait times have a tendency to be longer on weekdays than weekends. The boxplot highlights that weekdays tend to have more variable wait times and have a higher median, whereas the affective plot demonstrates this using individual data points and more abstract methods, such as the red-green gradient.
+
+d: One piece of feedback I got was to add another medium. Using this feedback, I got the idea to use my R plot for the gradient, precise data points, and mean, and use digital art to represent the data points with a coffee cup. This would include both the emotional evocation of the color gradient while adding artistic elements that are relevant to the data, which was collected from a coffee shop.
+
+b: (Shared in class)

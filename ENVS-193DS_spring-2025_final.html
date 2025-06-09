@@ -156,11 +156,11 @@ The following objects are masked from 'package:stats':
 <pre><code># A tibble: 5 × 3
   year  month mean_monthly_sst
   &lt;fct&gt; &lt;ord&gt;            &lt;dbl&gt;
-1 1990  Nov               16.5
-2 1984  Mar               14.8
-3 2018  Jan               15.0
-4 2003  May               12.9
-5 2013  Feb               12.8</code></pre>
+1 1988  Jun               13.7
+2 2012  Feb               13.4
+3 1991  Sep               16.8
+4 2018  Jul               18.2
+5 1990  Oct               17.7</code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Displaying structure</span></span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(sst_clean)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -405,6 +405,41 @@ Models ranked by AICc(x) </code></pre>
 <p><strong>Figure</strong> <strong>1</strong>: <em>Model Predictions for Swift Parrot Nest Box Occupancy</em>. This figure shows predicted probabilities of Swift Parrot (<em>Lathamus discolor</em>) occupancy in nest boxes based on distance to the forest edge for the 2016 and 2019 breeding seasons. Solid lines represent model predicted probabilities from a logistic regression with 95% confidence intervals (shaded bands) while points represent observed data (1 = occupied by Swift Parrots, 0 =not occupied). The model includes season and distance to forest edge as predictors.</p>
 <p><strong>Source</strong>: Stojanovic, Dejan et al.&nbsp;(2021). <em>Do nest boxes breed the target species or its competitors? A case study of a critically endangered bird</em> [Dataset]. Dryad.&nbsp;<a href="https://doi.org/10.5061/dryad.83bk3j9sb" class="uri">https://doi.org/10.5061/dryad.83bk3j9sb</a></p>
 <p>j:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Creating new data frame</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>new_data <span class="ot">&lt;-</span> <span class="fu">expand.grid</span>(</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">edge_distance =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">900</span>),</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">season =</span> <span class="fu">factor</span>(<span class="fu">c</span>(<span class="dv">2016</span>, <span class="dv">2019</span>)) <span class="co"># Treating season as factor</span></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Generating predicted probabilities  and 95% confidence intervals</span></span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>predicted <span class="ot">&lt;-</span> <span class="fu">predict</span>(</span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>  model1,</span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">newdata =</span> new_data,</span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">type =</span> <span class="st">"response"</span>, <span class="co"># Getting probabilities</span></span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">se.fit =</span> <span class="cn">TRUE</span> <span class="co"># Getting standard errors for CI</span></span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculating 95% Confidence Intervals</span></span>
+<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a>new_data<span class="sc">$</span>fit <span class="ot">&lt;-</span> predicted<span class="sc">$</span>fit</span>
+<span id="cb27-15"><a href="#cb27-15" aria-hidden="true" tabindex="-1"></a>new_data<span class="sc">$</span>lwr <span class="ot">&lt;-</span> predicted<span class="sc">$</span>fit <span class="sc">-</span> <span class="fl">1.96</span> <span class="sc">*</span> predicted<span class="sc">$</span>se.fit</span>
+<span id="cb27-16"><a href="#cb27-16" aria-hidden="true" tabindex="-1"></a>new_data<span class="sc">$</span>upr <span class="ot">&lt;-</span> predicted<span class="sc">$</span>fit <span class="sc">+</span> <span class="fl">1.96</span> <span class="sc">*</span> predicted<span class="sc">$</span>se.fit</span>
+<span id="cb27-17"><a href="#cb27-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-18"><a href="#cb27-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Displaying results</span></span>
+<span id="cb27-19"><a href="#cb27-19" aria-hidden="true" tabindex="-1"></a>new_data</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  edge_distance season        fit        lwr       upr
+1             0   2016 0.48063714 0.31951190 0.6417624
+2           900   2016 0.12478375 0.04074396 0.2088235
+3             0   2019 0.29803163 0.16657087 0.4294924
+4           900   2019 0.06139379 0.01199022 0.1107974</code></pre>
+</div>
+</div>
+<p>k: These results show that the predicted probability of Swift Parrot nest box occupancy is highest at the forest edge (0m) and decreases substaintially at 900m from the edge, in both 2016 and 2019. At 0m, the predicted occupancy probability was 48.1% in 2016 and 29.8% in 2019. At 900m, the probabilities dropped to 12.5% in 2016 and 6.1% in 2019. This pattern suggests a negative relationship between distance from the forest edge and nest box occupancy by Swift Parrots, whereas lower probabilities in 2019 may indicate less favorable environmental conditions or a lower population during that period. This suggests that Swift Parrots may rely on forest edges for food, resources, and nesting habitats, and may avoid the forest interior due to risk of predation or a lack of resources.</p>
+<p>Problem 4</p>
+<p>a: My exploratory visualizations from Homework 2 were much simpler, using a box plot and a linear plot comparing line wait times with number of people in line. Homework 2 had less data and highlighted medians, quartiles, and spread, however, my affective visualization from Homework 3 compared means using a dot and diamond plot. Due to its higher complexity and gradient, this was more useful in both comparing and emphasizing the emotional experience of waiting, using color and point size to communicate intensity and variation in wait durations between weekdays and weekends.</p>
+<p>b: Both visualizations include plots that compare wait times across weekdays and weekends. These also use similar x and y-axis labeling.</p>
+<p>c: Both visualizations show that wait times have a tendency to be longer on weekdays than weekends. The boxplot highlights that weekdays tend to have more variable wait times and have a higher median, whereas the affective plot demonstrates this using individual data points and more abstract methods, such as the red-green gradient.</p>
+<p>d: One piece of feedback I got was to add another medium. Using this feedback, I got the idea to use my R plot for the gradient, precise data points, and mean, and use digital art to represent the data points with a coffee cup. This would include both the emotional evocation of the color gradient while adding artistic elements that are relevant to the data, which was collected from a coffee shop.</p>
+<p>b: (Shared in class)</p>
 
 </main>
 <!-- /main column -->
