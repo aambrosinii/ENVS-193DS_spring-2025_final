@@ -1,5 +1,7 @@
 ---
 title: "envs193final"
+author: "Alyssa Ambrosini"
+date: "06/08/2025"
 format: html
 editor: visual
 github: https://github.com/aambrosinii/ENVS-193DS_spring-2025_final.git
@@ -53,9 +55,8 @@ b:
 
 ```{r}
 # Filter sst_clean to include only years 2018 through 2023
-sst_filtered <- sst_clean %>%
-  mutate(year = factor(year)) %>%
-  filter(year %in% c("2018", "2019", "2020", "2021", "2022", "2023"))
+sst_filtered <- sst_clean[sst_clean$year %in% 2018:2023, ]
+sst_filtered$year <- factor(sst_filtered$year)
 
 # Creating custom color gradient
 years <- sort(unique(sst_filtered$year))
@@ -64,8 +65,8 @@ names(color_gradient) <- years
 
 # Creating plot
 ggplot(sst_filtered, aes(x = month, y = mean_monthly_sst, group = year, color = year)) +
-  geom_line(size = 1) +
-  geom_point(size = 2) +
+  geom_line(linewidth = 1) + 
+   geom_point(size = 2) +
   scale_color_manual(values = color_gradient) +
   labs(
     title = "Monthly Sea Surface Temperature (2018–2023)",
@@ -77,8 +78,8 @@ ggplot(sst_filtered, aes(x = month, y = mean_monthly_sst, group = year, color = 
   theme(
     plot.title = element_text(hjust = 0.85),  # Shift title right
     panel.background = element_rect(fill = "#d7e5e3", color = NA),  # Background color
-    panel.border = element_rect(fill = NA, color = "black", size = 0.8),  # Border
- legend.position = c(0.1, 0.8),  # Legend inside plot panel (x, y from 0 to 1)
+    panel.border = element_rect(fill = NA, color = "black", linewidth = 0.8),  # Border
+ legend.position.inside = c(0.1, 0.8), # Legend inside plot panel (x, y from 0 to 1)
     legend.background = element_rect(fill = "white", color = "black")
   )
 ```
