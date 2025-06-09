@@ -24,6 +24,9 @@ a:
 library(tidyverse)
 library(lubridate)
 library(ggplot2)
+library(janitor)
+library(DHARMa)
+library(MuMIn)
 
 # Reading in data
 sst <- read.csv("data/SST_update2023.csv", stringsAsFactors = FALSE)
@@ -79,3 +82,146 @@ ggplot(sst_filtered, aes(x = month, y = mean_monthly_sst, group = year, color = 
     legend.background = element_rect(fill = "white", color = "black")
   )
 ```
+
+Problem 3
+
+```{r}
+# Reading and cleaning data
+nest_boxes <- read_csv("data/occdist.csv") %>%
+  janitor::clean_names() %>%     # Clean column names
+     mutate(
+       season = as.factor(season),        # 2016 or 2019
+    sp = as.factor(sp),                # 1 = Swift Parrot 0 = other
+    edge_distance = as.numeric(edge_distance)
+  )
+```
+
+a: In this data set, a 1 or 0 in the sp column indicates whether a Swift Parrot occupied a given nest box. A 1 means the nest box was occupied by a Swift Parrot, whereas a 0 means it was not.
+
+b: In this study, the main difference between Swift Parrots and other species is that they are the critically endangered target species that the nest box is meant to support, whereas Common Starlings are invasive and Tree Martins are native competitors. Because these species may also use the boxes, they could benefit competitors more than the target species, potentially hindering conservation efforts.
+
+c: The two seasons referred to in this study are 2016 and 2019. These differ in that 2016 had unusually high Swift Parrot breeding activity, whereas 2019 had very low Swift Parrot breeding activity, which the authors used to compare nest box occupancy patterns between high and low breeding seasons.
+
+d:
+
+```{r}
+
+# Creating table
+model_table <- tibble(
+  model_number = c("model0", "model1", "model2", "model3"),
+  season = c("no", "yes", "yes", "no"),
+  edge_distance = c("no", "yes", "yes", "no"),
+  description = c(
+    "Null Model (intercept only)",
+    "Saturated Model with Season and Distance",
+    "Model With Season Only",
+    "Model with Distance Only"
+  )
+  )
+  # Showing
+print(model_table)
+
+
+```
+
+e:
+
+```{r}
+  # Defining models
+model0 <- glm(sp ~ 1, data = nest_boxes, family = binomial)  # Null model
+model1 <- glm(sp ~ season + edge_distance, data = nest_boxes, family = binomial)  # Saturated model
+model2 <- glm(sp ~ season, data = nest_boxes, family = binomial)  # Season only
+model3 <- glm(sp ~ edge_distance, data = nest_boxes, family = binomial)  # Distance only
+```
+
+f:
+
+```{r}
+# Model 0 diagnostics
+res0 <- simulateResiduals(fittedModel = model0)
+plot(res0)
+# Model 1 diagnostics
+res1 <- simulateResiduals(fittedModel =model1)
+plot(res1)
+# Model 2 diagnostics
+res2 <- simulateResiduals(fittedModel =model2)
+plot(res2)
+# Model 3 diagnostics
+res3 <- simulateResiduals(fittedModel =model3)
+plot(res3)
+```
+
+g:
+
+```{r}
+# Creating a model list
+model_list <- list(
+  model0 = model0,
+  model1 = model1,
+  model2 = model2,
+  model3 = model3
+)
+# Compare using AIC
+aic_table <- model.sel(model_list)
+# Print
+print(aic_table)
+```
+
+The best model as determined by the AIC (Akaike's Information Criterion) was the model including season and distance to forest edge as predictors of Swift Parrot nest box occupancy. This model had the lowest AIC value (226.3), indicating the best balance of fit and simplicity among the models.
+
+h:
+
+```{r}
+# Refitting best model
+best_model <- glm(sp ~ season + edge_distance, data = nest_boxes, family = binomial)
+# Creating new plot
+newdata <- expand.grid(
+  edge_distance = seq(min(nest_boxes$edge_distance), max(nest_boxes$edge_distance), length.out = 100),
+  season = unique(nest_boxes$season)
+)
+# Getting predicted probabilities and confidence intervals
+predictions <- predict(best_model, newdata = newdata, type = "link", se.fit = TRUE)
+# Adding predictions and confidence intervals to newdata
+newdata <- newdata %>%
+  mutate(
+    fit_link = predictions$fit,
+    se_link = predictions$se.fit,
+    lower_link = fit_link - 1.96 * se_link,
+    upper_link = fit_link + 1.96 * se_link,
+    fit_prob = plogis(fit_link),
+    lower_prob = plogis(lower_link),
+    upper_prob = plogis(upper_link)
+  )
+# Plot
+ggplot () +
+  # Raw data points
+  geom_point(data = nest_boxes, aes(x = edge_distance, y = sp, color = season), alpha = 0.6) +
+  # Model predictions
+  geom_line(data = newdata, aes(x = edge_distance, y = fit_prob, color = season), size = 1.2) +
+  geom_ribbon(data = newdata, aes(x = edge_distance, ymin = lower_prob, ymax = upper_prob, fill = season), alpha = 0.3) +
+  labs(
+    x = "Distance to Forest Edge (m)",
+    y = "Probability of Swift Parrot Occupancy",
+    color = "Season",
+    fill = "Season",
+    title = "Model Predictions for Swift Parrot Nest Box Occupancy"
+  ) +
+   theme_minimal(base_size = 14) +
+  theme(
+    panel.grid = element_blank(),  # Removing gridlines
+    panel.background = element_rect(fill = "#f7f7f7", color = NA),  # Light background
+    legend.position = "right"
+  ) +
+  # ADding custom colors
+  scale_color_manual(values = c("2016" = "#0072B2", "2019" = "#D55E00")) +
+  scale_fill_manual(values = c("2016" = "#0072B2", "2019" = "#D55E00"))
+    
+```
+
+i:
+
+**Figure** **1**: *Model Predictions for Swift Parrot Nest Box Occupancy*. This figure shows predicted probabilities of Swift Parrot (*Lathamus discolor*) occupancy in nest boxes based on distance to the forest edge for the 2016 and 2019 breeding seasons. Solid lines represent model predicted probabilities from a logistic regression with 95% confidence intervals (shaded bands) while points represent observed data (1 = occupied by Swift Parrots, 0 =not occupied). The model includes season and distance to forest edge as predictors.
+
+**Source**: Stojanovic, Dejan et al. (2021). *Do nest boxes breed the target species or its competitors? A case study of a critically endangered bird* \[Dataset\]. Dryad. <https://doi.org/10.5061/dryad.83bk3j9sb>
+
+j:
